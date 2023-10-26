@@ -1,10 +1,150 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu } from "electron";
 import path from "path";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
   app.quit();
 }
+
+const menuTemplate: (
+  | Electron.MenuItemConstructorOptions
+  | Electron.MenuItem
+)[] = [
+  {
+    label: "New",
+    submenu: [
+      {
+        label: "Add Currency",
+        click: () => {
+          createCurrencyWindow();
+        },
+      },
+      {
+        label: "Add Media",
+        click: () => {
+          createMediaWindow();
+        },
+      },
+      {
+        label: "Add Advertisement",
+        click: () => {
+          createAdvertisementWindow();
+        },
+      },
+    ],
+  },
+  {
+    label: "Edit",
+    submenu: [
+      {
+        label: "Edit Details",
+        click: () => {
+          createDetailsWindow();
+        },
+      },
+      {
+        label: "Edit Screen Orientation",
+      },
+      {
+        label: "Edit Time Interval",
+      },
+      {
+        label: "Edit Animation",
+      },
+    ],
+  },
+  {
+    label: "Present",
+    submenu: [
+      { label: "Present Fullscreen" },
+      { label: "Present in a new window" },
+    ],
+  },
+  {
+    label: "Preferences",
+    submenu: [
+      {
+        label: "Settings",
+      },
+      {
+        label: "About",
+      },
+      {
+        label: "Quit",
+        click: () => {
+          app.quit();
+        },
+        accelerator: process.platform === "darwin" ? "Command+W" : "Ctrl+W",
+      },
+    ],
+  },
+];
+
+const createCurrencyWindow = () => {
+  const currencyWindow = new BrowserWindow({
+    width: 400,
+    height: 500,
+    title: "Add or Update Currency",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: false,
+    },
+  });
+  loadWindow(currencyWindow, "currency");
+};
+
+const createAdvertisementWindow = () => {
+  const advertisementWindow = new BrowserWindow({
+    width: 400,
+    height: 500,
+    title: "Add or Update Advertisement",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: false,
+    },
+  });
+  loadWindow(advertisementWindow, "advertisement");
+};
+
+const createMediaWindow = () => {
+  const mediaWindow = new BrowserWindow({
+    width: 400,
+    height: 500,
+    title: "Add or Update Media",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: false,
+    },
+  });
+
+  loadWindow(mediaWindow, "media");
+};
+
+const createDetailsWindow = () => {
+  const detailsWindow = new BrowserWindow({
+    width: 400,
+    height: 500,
+    title: "Update Details",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: false,
+    },
+  });
+  loadWindow(detailsWindow, "details");
+};
+
+const loadWindow = (window: BrowserWindow, page: string) => {
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    window.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}?page=${page}`);
+  } else {
+    window.loadFile(
+      path.join(
+        __dirname,
+        `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html?page=${page}`
+      )
+    );
+  }
+};
 
 const createWindow = () => {
   // Create the browser window.
@@ -13,23 +153,17 @@ const createWindow = () => {
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: false,
     },
   });
 
-  // and load the index.html of the app.
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}?page=add`);
-  } else {
-    mainWindow.loadFile(
-      path.join(
-        __dirname,
-        `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html?page=yo`
-      )
-    );
-  }
+  loadWindow(mainWindow, "home");
+
+  const mainMenu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(mainMenu);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished
